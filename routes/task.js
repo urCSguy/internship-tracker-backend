@@ -31,7 +31,7 @@ router.post("/", authMiddleware, async (req, res) => {
 });
 
 /**
- * GET TASKS (USER ONLY)
+ * GET TASKS
  */
 router.get("/", authMiddleware, async (req, res) => {
   try {
@@ -47,48 +47,19 @@ router.get("/", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+/**
+ * UPDATE TASK
+ */
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const taskId = parseInt(req.params.id);
     const { title, completed } = req.body || {};
 
-    const task = await prisma.task.findFirst({
+    const updated = await prisma.task.updateMany({
       where: {
         id: taskId,
         userId: req.user.userId
-      }
-    });
-
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-
-    const updatedTask = await prisma.task.update({
-      where: {
-        id: taskId
-      },
-      data: {
-        title: title ?? task.title,
-        completed: completed ?? task.completed
-      }
-    });
-
-    res.json(updatedTask);
-
-  } catch (err) {
-    console.log("UPDATE ERROR:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-router.put("/:id", authMiddleware, async (req, res) => {
-  try {
-    const taskId = parseInt(req.params.id);
-    const { title, completed } = req.body || {};
-
-    const updatedTask = await prisma.task.updateMany({
-      where: {
-        id: taskId,
-        userId: req.user.userId   // 🔥 ownership enforced here
       },
       data: {
         ...(title !== undefined && { title }),
@@ -96,7 +67,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
       }
     });
 
-    if (updatedTask.count === 0) {
+    if (updated.count === 0) {
       return res.status(404).json({ error: "Task not found" });
     }
 
@@ -107,4 +78,31 @@ router.put("/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+/**
+ * DELETE TASK (MISSING BEFORE — THIS FIXES YOUR ERROR)
+ */
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const taskId = parseInt(req.params.id);
+
+    const deleted = await prisma.task.deleteMany({
+      where: {
+        id: taskId,
+        userId: req.user.userId
+      }
+    });
+
+    if (deleted.count === 0) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    res.json({ message: "Task deleted successfully" });
+
+  } catch (err) {
+    console.log("DELETE ERROR:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 module.exports = router;
