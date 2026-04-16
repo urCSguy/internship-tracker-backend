@@ -6,14 +6,12 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const router = express.Router();
 
-console.log("BODY RECEIVED:", req.body);
-
 /**
  * LOGIN ROUTE
  */
 router.post("/login", async (req, res) => {
+  console.log("BODY RECEIVED:", req.body);
   try {
-    console.log("BODY RECEIVED:", req.body); // ✅ HERE
 
     const { email, password } = req.body || {};
 
