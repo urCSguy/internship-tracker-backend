@@ -80,31 +80,30 @@ router.put("/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-router.delete("/:id", authMiddleware, async (req, res) => {
+router.put("/:id", authMiddleware, async (req, res) => {
   try {
     const taskId = parseInt(req.params.id);
+    const { title, completed } = req.body || {};
 
-    const task = await prisma.task.findFirst({
+    const updatedTask = await prisma.task.updateMany({
       where: {
         id: taskId,
-        userId: req.user.userId
+        userId: req.user.userId   // 🔥 ownership enforced here
+      },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(completed !== undefined && { completed })
       }
     });
 
-    if (!task) {
+    if (updatedTask.count === 0) {
       return res.status(404).json({ error: "Task not found" });
     }
 
-    await prisma.task.delete({
-      where: {
-        id: taskId
-      }
-    });
-
-    res.json({ message: "Task deleted successfully" });
+    res.json({ message: "Task updated successfully" });
 
   } catch (err) {
-    console.log("DELETE ERROR:", err);
+    console.log("UPDATE ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
