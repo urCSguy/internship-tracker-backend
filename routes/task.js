@@ -39,6 +39,8 @@ router.get("/", authMiddleware, async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
 
     const skip = (page - 1) * limit;
+
+    const sort = (req.query.sort || "desc").toLowerCase();
     
     const { completed } = req.query;
 
@@ -54,8 +56,9 @@ router.get("/", authMiddleware, async (req, res) => {
       where: whereClause,
       skip,
       take: limit,
+      const sort = req.query.sort || "desc";
       orderBy: {
-        id: "desc"
+        id: sort === "asc" ? "asc" : "desc"
       }
     });
 
