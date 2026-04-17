@@ -52,14 +52,15 @@ router.get("/", authMiddleware, async (req, res) => {
       whereClause.completed = completed === "true";
     }
 
+    console.log("SORT VALUE:", sort);
+
     const tasks = await prisma.task.findMany({
       where: whereClause,
       skip,
       take: limit,
-      const sort = req.query.sort || "desc";
       orderBy: {
-        id: sort === "asc" ? "asc" : "desc"
-      }
+          id: sort === "asc" ? "asc" : "desc"
+        }
     });
 
     const total = await prisma.task.count({
@@ -141,4 +142,4 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-module.exports = router;]
+module.exports = router;
