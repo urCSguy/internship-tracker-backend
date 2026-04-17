@@ -35,13 +35,46 @@ router.post("/", authMiddleware, async (req, res) => {
  */
 router.get("/", authMiddleware, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+
+    const skip = (page - 1) * limit;
+    
+    const { completed } = req.query;
+
+    const whereClause = {
+      userId: req.user.userId
+    };
+
+    if (completed !== undefined) {
+      whereClause.completed = completed === "true";
+    }
+
     const tasks = await prisma.task.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      orderBy: {
+        id: "desc"
+      }
+    });
+
+    const total = await prisma.task.count({
       where: {
         userId: req.user.userId
       }
     });
 
-    res.json(tasks);
+    res.json({
+      data: tasks,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
   } catch (err) {
     console.log("GET TASKS ERROR:", err);
     res.status(500).json({ error: "Server error" });
@@ -105,4 +138,4 @@ router.delete("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router;]
